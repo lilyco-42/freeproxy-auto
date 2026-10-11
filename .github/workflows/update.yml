@@ -5,7 +5,12 @@ on:
     - cron: '0 */3 * * *'      # 每 3 小时
   workflow_dispatch:          # 手动触发
   push:
-    branches: [main]          # 改 sources.txt 后自动重跑
+    branches: [main]          # 仅当改到源/配置/脚本时重跑（output 提交不触发，避免循环）
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/**'
+      - 'config/**'
+      - 'sources.txt'
 
 concurrency:
   group: update-nodes
