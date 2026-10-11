@@ -12,6 +12,7 @@
   claude.yaml  -- 仅 Claude 可用节点（节点名含 CL- 标签）
   openai.yaml  -- 仅 OpenAI/ChatGPT 可用节点（节点名含 GPT 标签）
   clean.yaml   -- 仅纯净 IP 节点（Scamalytics fraud score <= CLEAN_SCORE_MAX）
+  ultra_clean.yaml -- 仅严格纯净节点（Scamalytics fraud score <= CLEAN_SCORE_STRICT 极佳段）
   v2ray.txt    -- base64 通用订阅
   status.md    -- 节点统计报告（分类数量 + 纯净度分布 + 速度 Top）
 """
@@ -30,6 +31,8 @@ except ImportError:  # Action 里先 pip install pyyaml
 
 # Scamalytics fraud score 合格线：0-15 极佳 / 15-40 有风控风险 / >40 基本别指望
 CLEAN_SCORE_MAX = 40
+# 严格纯净档：仅极佳段（注册账号/AI 场景首选）
+CLEAN_SCORE_STRICT = 15
 
 AUTO = "🔍 自动选择"
 MANUAL = "🎯 手动选择"
@@ -134,6 +137,7 @@ def classify(proxies, recs):
         "claude": ("🤖 Claude 可用", set()),
         "openai": ("💬 OpenAI 可用", set()),
         "clean": ("🧼 纯净 IP", set()),
+        "ultra_clean": ("💎 严格纯净 IP", set()),
     }
     for p in proxies:
         name = p.get("name", "")
@@ -159,6 +163,8 @@ def classify(proxies, recs):
                 risk = int(m.group(1))
         if risk is not None and risk <= CLEAN_SCORE_MAX:
             cats["clean"][1].add(name)
+        if risk is not None and risk <= CLEAN_SCORE_STRICT:
+            cats["ultra_clean"][1].add(name)
 
     named = {p.get("name") for p in proxies}
     out = {}
@@ -169,6 +175,7 @@ def classify(proxies, recs):
             "claude": "仅含 Claude 可用节点（claude.ai 地区不在封禁列表）",
             "openai": "仅含 ChatGPT/OpenAI 可用节点（含 Gemini 的 GPT 标签不在此列）",
             "clean": "仅含 Scamalytics 纯净度评分 ≤ %d 的节点（数值越低越干净，0-15 极佳）" % CLEAN_SCORE_MAX,
+            "ultra_clean": "仅含 Scamalytics 纯净度评分 ≤ %d 的节点（极佳段，注册账号/AI 首选）" % CLEAN_SCORE_STRICT,
         }[key]
         out[key] = (title, subset, note)
     return cats, out
@@ -242,6 +249,7 @@ def main():
     cl_n = len(cats["claude"][1])
     op_n = len(cats["openai"][1])
     clean_n = len(cats["clean"][1])
+    ultra_n = len(cats["ultra_clean"][1])
 
     lines = [
         "# 📡 节点状态",
@@ -255,6 +263,7 @@ def main():
         "| 🤖 Claude 可用 | %d |" % cl_n,
         "| 💬 OpenAI 可用 | %d |" % op_n,
         "| 🧼 纯净 IP(评分≤%d) | %d |" % (CLEAN_SCORE_MAX, clean_n),
+        "| 💎 严格纯净 IP(评分≤%d) | %d |" % (CLEAN_SCORE_STRICT, ultra_n),
     ]
     if checked_at:
         lines.append("| 检测时间(check) | %s |" % checked_at)
@@ -299,8 +308,8 @@ def main():
     print("==> output/ 产物:")
     for fn in sorted(os.listdir(out_dir)):
         print("   ", fn, os.path.getsize(os.path.join(out_dir, fn)))
-    print("==> 分类: youtube=%d claude=%d openai=%d clean=%d (全量=%d)"
-          % (yt_n, cl_n, op_n, clean_n, len(proxies)))
+    print("==> 分类: youtube=%d claude=%d openai=%d clean=%d ultra_clean=%d (全量=%d)"
+          % (yt_n, cl_n, op_n, clean_n, ultra_n, len(proxies)))
 
 
 if __name__ == "__main__":
