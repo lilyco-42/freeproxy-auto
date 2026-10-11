@@ -43,8 +43,16 @@ node-type: []
 # 节点名称过滤正则（留空不过滤）
 #filter: []
 
-# 流媒体检测（关闭，节省时间）
-media-check: false
+# 媒体/AI/纯净度检测（节点真实出口检测）
+media-check: true
+# 单平台检测超时（秒）
+media-check-timeout: 10
+# 检测平台：openai/youtube/claude = 解锁标签；iprisk = Scamalytics 纯净度评分(%),同时刷新真实出口国
+platforms:
+  - openai
+  - youtube
+  - claude
+  - iprisk
 
 # 保留最近 N 天历史节点（0 关闭）
 keep-days: 0

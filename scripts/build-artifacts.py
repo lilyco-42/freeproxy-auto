@@ -1,21 +1,25 @@
 #!/usr/bin/env python3
-"""后处理：把 subs-check 的 artifacts/ 打包为用户可订阅的产物。
+"""后处理：把 subs-check 的 artifacts/ 打包为用户可订阅的产物 + 按用途分类。
 
 输入:
-  artifacts/all.yaml      -- 存活节点列表 (proxies)
-  artifacts/base64.txt    -- base64 通用订阅（可选）
-  artifacts/mihomo.yaml   -- mihomo 订阅（可选）
-  <repo>/config/results.json -- 测速/延迟明细（可选，用于生成状态报告）
+  artifacts/all.yaml          -- 存活节点列表 (proxies，节点名含速度/媒体/纯净度标签)
+  artifacts/base64.txt        -- base64 通用订阅（可选）
+  <repo>/config/../results.json -- 结构化明细（测速/媒体/unlock/ipRisk，可选）
 
 输出 (output/):
-  clash.yaml   -- 完整 Clash/Mihomo 订阅（proxies + proxy-groups + rules）
+  clash.yaml   -- 全量 Clash/Mihomo 订阅（proxies + proxy-groups + rules）
+  youtube.yaml -- 仅 YouTube 解锁节点（节点名含 YT- 标签）
+  claude.yaml  -- 仅 Claude 可用节点（节点名含 CL- 标签）
+  openai.yaml  -- 仅 OpenAI/ChatGPT 可用节点（节点名含 GPT 标签）
+  clean.yaml   -- 仅纯净 IP 节点（Scamalytics fraud score <= CLEAN_SCORE_MAX）
   v2ray.txt    -- base64 通用订阅
-  status.md    -- 节点统计报告（也用于写 README 徽章）
+  status.md    -- 节点统计报告（分类数量 + 纯净度分布 + 速度 Top）
 """
 import argparse
 import datetime
 import json
 import os
+import re
 import sys
 
 try:
@@ -23,6 +27,12 @@ try:
 except ImportError:  # Action 里先 pip install pyyaml
     print("PyYAML 未安装，请先执行: pip install pyyaml", file=sys.stderr)
     sys.exit(2)
+
+# Scamalytics fraud score 合格线：0-15 极佳 / 15-40 有风控风险 / >40 基本别指望
+CLEAN_SCORE_MAX = 40
+
+AUTO = "🔍 自动选择"
+MANUAL = "🎯 手动选择"
 
 
 def load_proxies(all_yaml_path):
@@ -60,11 +70,9 @@ def proxy_names(proxies):
 
 def build_clash_yaml(proxies):
     names = proxy_names(proxies)
-    auto = "🔍 自动选择"
-    manual = "🎯 手动选择"
     groups = [
         {
-            "name": auto,
+            "name": AUTO,
             "type": "url-test",
             "url": "http://www.gstatic.com/generate_204",
             "interval": 300,
@@ -72,29 +80,123 @@ def build_clash_yaml(proxies):
             "proxies": names,
         },
         {
-            "name": manual,
+            "name": MANUAL,
             "type": "select",
-            "proxies": [auto, "DIRECT"] + names,
+            "proxies": [AUTO, "DIRECT"] + names,
         },
     ]
-    rules = ["GEOIP,CN,DIRECT", "MATCH,%s" % auto]
-    buf = yaml.safe_dump(
-        {
-            "proxies": proxies,
-            "proxy-groups": groups,
-            "rules": rules,
-        },
+    rules = ["GEOIP,CN,DIRECT", "MATCH,%s" % AUTO]
+    return yaml.safe_dump(
+        {"proxies": proxies, "proxy-groups": groups, "rules": rules},
         allow_unicode=True,
         sort_keys=False,
         width=4096,
     )
-    return buf
+
+
+def _speed_of(n):
+    try:
+        return int(n.get("speed") or 0)
+    except (TypeError, ValueError):
+        return 0
+
+
+def collect_node_records(results):
+    """把 results.json 的 nodes[] 建成 name -> 结构化记录 的字典。"""
+    nodes = results.get("nodes", []) if isinstance(results, dict) else []
+    recs = {}
+    for n in nodes:
+        name = n.get("name")
+        if not name:
+            continue
+        media = {}
+        for m in n.get("media") or []:
+            media[m.get("platform")] = m.get("tag") or ""
+        ipr = n.get("ipRisk") or ""
+        ipr_num = None
+        if isinstance(ipr, str):
+            m = re.match(r"^(\d{1,3})%?$", ipr.strip())
+            if m:
+                ipr_num = int(m.group(1))
+        recs[name] = {
+            "media": media,
+            "iprisk": ipr_num,
+            "country": n.get("country") or "",
+            "speed": _speed_of(n),
+        }
+    return recs
+
+
+def classify(proxies, recs):
+    """返回 {filename: (title, proxies子集, note)} 及每类数量描述。"""
+    cats = {
+        "youtube": ("🎬 YouTube 解锁", set()),
+        "claude": ("🤖 Claude 可用", set()),
+        "openai": ("💬 OpenAI 可用", set()),
+        "clean": ("🧼 纯净 IP", set()),
+    }
+    for p in proxies:
+        name = p.get("name", "")
+        rec = recs.get(name, {})
+        media = rec.get("media", {})
+        iprisk = rec.get("iprisk")
+
+        def has_tag(key):
+            return bool(media.get(key)) or f"|{key}-" in name
+
+        if has_tag("youtube") or "|YT-" in name:
+            cats["youtube"][1].add(name)
+        if has_tag("claude") or "|CL-" in name:
+            cats["claude"][1].add(name)
+        if media.get("openai") or "|GPT" in name or "|GPT⁺" in name:
+            cats["openai"][1].add(name)
+
+        # 纯净 IP：优先 results 里的数值；缺失则从名字解析 "|NN%"
+        risk = iprisk
+        if risk is None:
+            m = re.search(r"\|\s*(\d{1,3})%", name)
+            if m:
+                risk = int(m.group(1))
+        if risk is not None and risk <= CLEAN_SCORE_MAX:
+            cats["clean"][1].add(name)
+
+    named = {p.get("name") for p in proxies}
+    out = {}
+    for key, (title, members) in cats.items():
+        subset = [p for p in proxies if p.get("name") in members]
+        note = {
+            "youtube": "仅含 YouTube Premium 解锁节点（可看 YouTube）",
+            "claude": "仅含 Claude 可用节点（claude.ai 地区不在封禁列表）",
+            "openai": "仅含 ChatGPT/OpenAI 可用节点（含 Gemini 的 GPT 标签不在此列）",
+            "clean": "仅含 Scamalytics 纯净度评分 ≤ %d 的节点（数值越低越干净，0-15 极佳）" % CLEAN_SCORE_MAX,
+        }[key]
+        out[key] = (title, subset, note)
+    return cats, out
+
+
+def write_category(out_dir, filename, title, subset, note, stamp):
+    if not subset:
+        print("!! %s 无节点，保留上次文件" % filename, file=sys.stderr)
+        return False
+    header = (
+        "# freeproxy-auto · %s\n"
+        "# 节点数: %d · 生成时间: %s\n"
+        "# %s\n"
+        "# 警告: 免费公共节点存在隐私/蜜罐风险\n\n"
+    ) % (title, len(subset), stamp, note)
+    with open(os.path.join(out_dir, filename), "w", encoding="utf-8") as f:
+        f.write(header + build_clash_yaml(subset))
+    return True
 
 
 def main():
+    global CLEAN_SCORE_MAX
     ap = argparse.ArgumentParser()
     ap.add_argument("--repo-root", default=".")
+    ap.add_argument("--clean-max", type=int, default=CLEAN_SCORE_MAX)
     args = ap.parse_args()
+
+    CLEAN_SCORE_MAX = args.clean_max
 
     root = args.repo_root
     art = os.path.join(root, "artifacts")
@@ -106,21 +208,26 @@ def main():
 
     proxies = load_proxies(os.path.join(art, "all.yaml"))
     results = load_results(root)
-    nodes = results.get("nodes", []) if isinstance(results, dict) else []
-    checked_at = results.get("checkedAt", "")
+    recs = collect_node_records(results)
+    checked_at = results.get("checkedAt", "") if isinstance(results, dict) else ""
 
-    # ---- clash.yaml ----
+    # ---- 全量 clash.yaml ----
     if proxies:
-        body = build_clash_yaml(proxies)
         header = (
             "# freeproxy-auto 自动生成 · 每 3 小时更新\n"
             "# 节点数: %d · 生成时间: %s\n"
+            "# 节点名标签: 速度|媒体解锁(YT-区/CL-区/GPT/GPT⁺/NF/D+/GM)|纯净度%%\n"
             "# 警告: 免费公共节点存在隐私/蜜罐风险，请勿在通过它们的连接中登录或传输敏感数据\n\n"
         ) % (len(proxies), stamp)
         with open(os.path.join(out_dir, "clash.yaml"), "w", encoding="utf-8") as f:
-            f.write(header + body)
+            f.write(header + build_clash_yaml(proxies))
     else:
         print("!! 无一存活节点，保留上次 output/clash.yaml", file=sys.stderr)
+
+    # ---- 分类订阅 ----
+    cats, cat_files = classify(proxies, recs)
+    for key, (title, subset, note) in cat_files.items():
+        write_category(out_dir, "%s.yaml" % key, title, subset, note, stamp)
 
     # ---- v2ray.txt ----
     b64_src = os.path.join(art, "base64.txt")
@@ -131,6 +238,11 @@ def main():
             f.write(content)
 
     # ---- status.md ----
+    yt_n = len(cats["youtube"][1])
+    cl_n = len(cats["claude"][1])
+    op_n = len(cats["openai"][1])
+    clean_n = len(cats["clean"][1])
+
     lines = [
         "# 📡 节点状态",
         "",
@@ -138,20 +250,38 @@ def main():
         "|---|---|",
         "| 生成时间 | %s |" % stamp,
         "| 存活节点数 | %d |" % len(proxies),
-        "| 测速节点明细 | %d |" % len(nodes),
+        "| 测速节点明细 | %d |" % len(recs),
+        "| 🎬 YouTube 解锁 | %d |" % yt_n,
+        "| 🤖 Claude 可用 | %d |" % cl_n,
+        "| 💬 OpenAI 可用 | %d |" % op_n,
+        "| 🧼 纯净 IP(评分≤%d) | %d |" % (CLEAN_SCORE_MAX, clean_n),
     ]
     if checked_at:
         lines.append("| 检测时间(check) | %s |" % checked_at)
     lines.append("")
 
+    # 纯净度分布
+    scores = [r["iprisk"] for r in recs.values() if r["iprisk"] is not None]
+    if scores:
+        low = sum(1 for s in scores if s <= 15)
+        mid = sum(1 for s in scores if 15 < s <= CLEAN_SCORE_MAX)
+        high = sum(1 for s in scores if s > CLEAN_SCORE_MAX)
+        lines.append("## 🧼 纯净度分布（Scamalytics fraud score，数值越低越纯净）")
+        lines.append("")
+        lines.append("| 档位 | 数量 |")
+        lines.append("|---|---|")
+        lines.append("| 0-15（极佳，适合注册账号/AI） | %d |" % low)
+        lines.append("| 16-%d（可通过测试，有风控风险） | %d |" % (CLEAN_SCORE_MAX, mid))
+        lines.append("| >%d（污染/机房高利） | %d |" % (CLEAN_SCORE_MAX, high))
+        lines.append("")
+
     def speed_of(n):
         try:
-            s = int(n.get("speed") or 0)
-            return s
+            return int(n.get("speed") or 0)
         except (TypeError, ValueError):
             return 0
 
-    good = [n for n in nodes if speed_of(n) > 0]
+    good = [n for n in (results.get("nodes", []) if isinstance(results, dict) else []) if speed_of(n) > 0]
     good.sort(key=speed_of, reverse=True)
     if good:
         lines.append("## ⚡ 速度 Top 20")
@@ -162,8 +292,6 @@ def main():
             name = (n.get("name") or "").replace("|", "\\|")
             gb = n.get("country") or n.get("ip") or "-"
             lines.append("| %d | %s | %s | %s |" % (i, name, speed_of(n), gb))
-    elif nodes:
-        lines.append("暂无数值速度数据（本次可能仅做了连通性检测）。")
 
     with open(os.path.join(out_dir, "status.md"), "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
@@ -171,7 +299,8 @@ def main():
     print("==> output/ 产物:")
     for fn in sorted(os.listdir(out_dir)):
         print("   ", fn, os.path.getsize(os.path.join(out_dir, fn)))
-    print("==> 存活节点:", len(proxies))
+    print("==> 分类: youtube=%d claude=%d openai=%d clean=%d (全量=%d)"
+          % (yt_n, cl_n, op_n, clean_n, len(proxies)))
 
 
 if __name__ == "__main__":
