@@ -1,0 +1,85 @@
+# subs-check 配置模板（run-check.sh 会把 {{OUTPUT_DIR}} 替换为实际路径后生成 config/checker.yaml）
+
+# 是否显示进度
+print-progress: true
+
+# 并发线程数（测活阶段）
+concurrent: 50
+# 流媒体检测并发数（未启用 media-check，不影响）
+media-concurrent: 20
+# 测速并发数（放低避免节点间抢带宽导致测速不准）
+speed-concurrent: 20
+# 打乱节点测试顺序，避免同源相邻节点扎堆互相干扰
+shuffle-test-order: true
+
+# 检查间隔（分钟）——Action 里跑完一轮即杀掉，该值无关紧要，但必须 >0
+check-interval: 120
+
+# 超时时间（毫秒，单节点最大延迟）
+timeout: 5000
+# 延迟测试 URL
+alive-test-url: http://gstatic.com/generate_204
+# 测速地址
+speed-test-url: https://github.com/AaronFeng753/Waifu2x-Extension-GUI/releases/download/v2.21.12/Waifu2x-Extension-GUI-v2.21.12-Portable.7z
+# 最低测速（KB/s），低于此值丢弃
+min-speed: 512
+# 下载测试时间（秒）
+download-timeout: 10
+# 单节点测速下载上限（MB）
+download-mb: 20
+# 总下载速度上限（MB/s），0 为不限
+total-speed-limit: 0
+
+# 本地订阅接口：http://127.0.0.1:8199/all.yaml
+listen-port: ":8199"
+
+# 以节点 IP 查询位置重命名节点
+rename-node: true
+node-prefix: ""
+
+# 只测试指定协议（留空为全部）
+node-type: []
+
+# 节点名称过滤正则（留空不过滤）
+#filter: []
+
+# 流媒体检测（关闭，节省时间）
+media-check: false
+
+# 保留最近 N 天历史节点（0 关闭）
+keep-days: 0
+
+# 输出目录（{{OUTPUT_DIR}} 由 run-check.sh 替换为仓库内 artifacts/ 绝对路径）
+output-dir: "{{OUTPUT_DIR}}"
+
+# 不启动 Web 控制面板，仅保留订阅服务接口
+enable-web-ui: false
+api-key: ""
+
+# 检测完成后的回调脚本（不启用）
+callback-script: ""
+
+# SubStore 端口：开启后额外生成 mihomo.yaml / base64.txt
+sub-store-port: ":8299"
+
+# 保存方式：本地文件
+save-method: local
+
+# 获取订阅失败后的重试次数与并发
+sub-urls-retry: 3
+sub-urls-concurrent: 20
+# 获取订阅时的 UA
+sub-urls-get-ua: "clash.meta (https://github.com/beck-8/subs-check)"
+
+# Github Proxy 加速（留空直连）
+github-proxy: ""
+
+# 出站代理（留空；Action 运行在 GitHub 出口，不需要代理）
+proxy: ""
+
+# 远程订阅清单：指向本仓库 sources.txt，方便只维护一个文件
+sub-urls-remote:
+  - https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/sources.txt
+
+# 本地订阅地址（由远程清单覆盖，留空）
+sub-urls: []

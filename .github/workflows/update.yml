@@ -1,0 +1,43 @@
+name: Update Free Nodes
+
+on:
+  schedule:
+    - cron: '0 */3 * * *'      # 每 3 小时
+  workflow_dispatch:          # 手动触发
+  push:
+    branches: [main]          # 改 sources.txt 后自动重跑
+
+concurrency:
+  group: update-nodes
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download subs-check & run one full check cycle
+        shell: bash
+        run: bash scripts/run-check.sh
+        timeout-minutes: 40
+
+      - name: Build output artifacts (clash.yaml / v2ray.txt / status.md)
+        shell: bash
+        run: |
+          pip install --quiet pyyaml
+          python3 scripts/build-artifacts.py --repo-root "$GITHUB_WORKSPACE"
+
+      - name: Commit & push results
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add output artifacts README.md
+          git diff --cached --quiet && { echo "no changes"; exit 0; }
+          git commit -m "chore: refresh free nodes $(date -u +'%Y-%m-%d %H:%M') UTC"
+          git push

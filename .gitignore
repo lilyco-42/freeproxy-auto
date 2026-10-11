@@ -1,0 +1,9 @@
+# 运行时产物（不提交）
+subs-check
+subs-check.exe
+check.log
+__pycache__/
+*.pyc
+
+# 本地最小化验证目录
+local-test/

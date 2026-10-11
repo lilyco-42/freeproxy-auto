@@ -1,0 +1,62 @@
+# freeproxy-auto 免费节点订阅源清单
+# 每行一个订阅地址；支持 # 注释与空行
+# 由 gh search 全量检索 + 社区常用源汇总而来
+# 更新本文件后再次触发 Action 即可，无需改配置
+
+# ===== gh search 检索到的活跃源 =====
+# snakem982/proxypool ★2167 每天 8/12/18/22 点更新
+https://raw.githubusercontent.com/snakem982/proxypool/main/source/clash-meta-2.yaml
+https://raw.githubusercontent.com/snakem982/proxypool/main/source/v2ray-2.txt
+https://raw.githubusercontent.com/snakem982/proxypool/main/source/sing-box-2.json
+
+# awesome-vpn/awesome-vpn ★6617 每日更新
+https://raw.githubusercontent.com/awesome-vpn/awesome-vpn/master/clash.yaml
+https://raw.githubusercontent.com/awesome-vpn/awesome-vpn/master/all
+https://raw.githubusercontent.com/awesome-vpn/awesome-vpn/master/sing-box.json
+
+# Au1rxx/free-vpn-subscriptions ★940 hourly refresh
+https://raw.githubusercontent.com/Au1rxx/free-vpn-subscriptions/main/output/clash.yaml
+https://raw.githubusercontent.com/Au1rxx/free-vpn-subscriptions/main/output/v2ray-base64.txt
+
+# VPN-Subcription-Links/ClashX-V2Ray-TopFreeProxy ★5589
+https://raw.githubusercontent.com/VPN-Subcription-Links/ClashX-V2Ray-TopFreeProxy/main/combine/clash.config.yaml
+https://raw.githubusercontent.com/VPN-Subcription-Links/ClashX-V2Ray-TopFreeProxy/main/combine/clashsub.txt
+
+# kooker/FreeSubsCheck ★418 每 2 小时更新
+https://raw.githubusercontent.com/kooker/FreeSubsCheck/main/mihomo.yaml
+https://raw.githubusercontent.com/kooker/FreeSubsCheck/main/all.yaml
+https://raw.githubusercontent.com/kooker/FreeSubsCheck/main/base64.txt
+https://raw.githubusercontent.com/kooker/FreeSubsCheck/main/kooker.jp.txt
+
+# 0xRadikal/Free-v2ray-Configs ★715 每 15 分钟自动更新
+https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/verified/clash.yaml
+https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/fast/clash.yaml
+https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/verified/configs_base64.txt
+https://raw.githubusercontent.com/0xRadikal/Free-v2ray-Configs/main/fast/configs_base64.txt
+
+# ===== 社区长期维护的经典源 =====
+https://raw.githubusercontent.com/firefoxmmx2/v2rayshare_subcription/main/subscription/clash_sub.yaml
+https://raw.githubusercontent.com/Q3dlaXpoaQ/V2rayN_Clash_Node_Getter/refs/heads/main/APIs/sc0.yaml
+https://raw.githubusercontent.com/mahdibland/SSAggregator/master/sub/sub_merge_yaml.yml
+https://raw.githubusercontent.com/chengaopan/AutoMergePublicNodes/master/list.yml
+https://raw.githubusercontent.com/zhangkaiitugithub/passcro/main/speednodes.yaml
+https://raw.githubusercontent.com/aiboboxx/v2rayfree/refs/heads/main/README.md
+https://raw.githubusercontent.com/peasoft/NoMoreWalls/master/snippets/nodes.meta.yml
+https://raw.githubusercontent.com/Ruk1ng001/freeSub/main/clash.yaml
+https://raw.githubusercontent.com/SoliSpirit/v2ray-configs/main/all_configs.txt
+https://raw.githubusercontent.com/ripaojiedian/freenode/main/clash
+https://raw.githubusercontent.com/go4sharing/sub/main/sub.yaml
+https://raw.githubusercontent.com/actionsfz/v2ray/refs/heads/master/all.yaml
+https://raw.githubusercontent.com/Pawdroid/Free-servers/refs/heads/main/sub
+https://raw.githubusercontent.com/acymz/AutoVPN/main/data/V2.txt
+https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/wenode.txt
+https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/v2rayshare.txt
+https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/nodefree.txt
+https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/ndnode.txt
+https://raw.githubusercontent.com/Barabama/FreeNodes/main/nodes/clashmeta.txt
+https://raw.githubusercontent.com/xiaoji235/airport-free/main/v2ray.txt
+https://raw.githubusercontent.com/anaer/Sub/main/clash.yaml
+https://raw.githubusercontent.com/ermaozi/get_subscribe/main/subscribe/clash.yml
+https://raw.githubusercontent.com/vxiaov/free_proxies/main/clash/clash.provider.yaml
+https://raw.githubusercontent.com/zhuhaiuk/free-nodes/main/clash_config.yaml
+https://raw.githubusercontent.com/free18/v2ray/main/c.yaml

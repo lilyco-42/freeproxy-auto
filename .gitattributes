@@ -1,0 +1,5 @@
+# 保证 runner 上 bash/python 脚本与 workflow 始终为 LF
+*.sh text eol=lf
+*.py text eol=lf
+.github/workflows/*.yml text eol=lf
+*.yaml text eol=lf
