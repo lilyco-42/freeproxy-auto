@@ -45,4 +45,6 @@ jobs:
           git add output README.md
           git diff --cached --quiet && { echo "no changes"; exit 0; }
           git commit -m "chore: refresh free nodes $(date -u +'%Y-%m-%d %H:%M') UTC"
+          # 若有人在 run 期间推送了代码，先把我们的产物 rebase 到最新再推
+          git pull --rebase origin main 2>/dev/null || true
           git push
