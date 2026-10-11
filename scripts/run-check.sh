@@ -30,9 +30,9 @@ SUBS_PID=$!
 cleanup() { kill "$SUBS_PID" 2>/dev/null || true; }
 trap cleanup EXIT
 
-echo "==> waiting for check cycle to finish (max ~25 min)"
+echo "==> waiting for check cycle to finish (max ~35 min)"
 found=0
-for _ in $(seq 1 300); do
+for _ in $(seq 1 420); do
   if grep -q "检测完成\|检测代理失败\|保存.*失败" "$REPO_ROOT/check.log" 2>/dev/null; then
     found=1
     break

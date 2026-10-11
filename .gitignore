@@ -7,3 +7,6 @@ __pycache__/
 
 # 本地最小化验证目录
 local-test/
+
+# subs-check 中间产物（含 114MB node 运行时，不提交；只提交 output/ 的最终订阅）
+artifacts/
