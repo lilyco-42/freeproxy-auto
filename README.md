@@ -5,30 +5,9 @@
 	<a href="https://github.com/beck-8/subs-check/releases"><img src="https://img.shields.io/github/downloads/beck-8/subs-check/total.svg?style=flat-square" /></a>
   <a href="https://hub.docker.com/r/beck8/subs-check/tags"><img src="https://img.shields.io/docker/pulls/beck8/subs-check" /></a>
 	<a href="https://github.com/beck-8/subs-check/issues"><img src="https://img.shields.io/github/issues-raw/beck-8/subs-check.svg?style=flat-square&label=issues" /></a>
-	<a href="https://github.com/beck-8/subs-check/graphs/contributors"><img src="https://img.shields.io/github/contributors/beck-8/subs-check?style=flat-square&label=contributors" /></a>
-	<a href="https://github.com/lilyco-42/freeproxy-auto/blob/main/LICENSE"><img src="https://img.shields.io/github/license/lilyco-42/freeproxy-auto?style=flat-square" /></a>
+	<a href="https://github.com/beck-8/subs-check/graphs/contributors"><img src="https://img.shields.io/github/contributors/beck-8/subs-check?style=flat-square" /></a>
+	<a href="https://github.com/beck-8/subs-check/blob/master/LICENSE"><img src="https://img.shields.io/github/license/beck-8/subs-check?style=flat-square" /></a>
 </p>
-
----
-
-## 📡 本仓库的免费节点订阅（每 3 小时自动更新）
-
-> GitHub Actions 定期聚合公开免费订阅 → [subs-check](https://github.com/beck-8/subs-check) 真实协议测活/测速 → 检测 YouTube / Claude / OpenAI 解锁与 Scamalytics IP 纯净度 → 按用途分类发布。
-> 节点名格式：`旗帜|速度|GPT⁺-区|YT-区|CL-区|纯净度%`，五个维度一目了然。
-
-| 订阅 | 适用场景 | 直链（Clash/Mihomo 格式） |
-|---|---|---|
-| 🏆 精品 | 四轴全过：YT+CL+GPT 全解锁且纯净度 ≤15，首选 | [premium.yaml](https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/output/premium.yaml) |
-| 🎬 YouTube | 可看 YouTube | [youtube.yaml](https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/output/youtube.yaml) |
-| 🤖 Claude | claude.ai 可用 | [claude.yaml](https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/output/claude.yaml) |
-| 💬 OpenAI | ChatGPT 可用 | [openai.yaml](https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/output/openai.yaml) |
-| 🧼 纯净 IP | Scamalytics ≤40 | [clean.yaml](https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/output/clean.yaml) |
-| 💎 严格纯净 | Scamalytics ≤15，注册账号/AI 首选 | [ultra_clean.yaml](https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/output/ultra_clean.yaml) |
-| 🌐 全量 | 所有存活节点 | [clash.yaml](https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/output/clash.yaml) / [v2ray.txt](https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/output/v2ray.txt) |
-
-最新检测统计见 [output/status.md](https://raw.githubusercontent.com/lilyco-42/freeproxy-auto/main/output/status.md)。
-
-> ⚠️ 免费公共节点存在隐私/蜜罐风险：不要在通过它们的连接中登录账号或传输敏感数据。
 
 ---
 
