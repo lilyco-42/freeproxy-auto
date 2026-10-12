@@ -25,6 +25,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # 完整历史：推送步骤 rebase 需要真实基线，浅克隆会加剧 non-fast-forward 失败
+          fetch-depth: 0
 
       - name: Download subs-check & run one full check cycle
         shell: bash
@@ -45,6 +48,13 @@ jobs:
           git add output README.md
           git diff --cached --quiet && { echo "no changes"; exit 0; }
           git commit -m "chore: refresh free nodes $(date -u +'%Y-%m-%d %H:%M') UTC"
-          # 若有人在 run 期间推送了代码，先把我们的产物 rebase 到最新再推
-          git pull --rebase origin main 2>/dev/null || true
-          git push
+          # 推送竞态防护：run 期间若远端前进（定时/手动触发并发、人工提交），
+          # 先 rebase 到最新再推；最多重试 3 次，每次失败后丢弃产物提交重来
+          ok=0
+          for i in 1 2 3; do
+            if git push; then ok=1; break; fi
+            echo "!! push rejected (attempt $i), rebasing onto latest origin/main"
+            git fetch origin main
+            git rebase origin/main || { git rebase --abort; exit 1; }
+          done
+          [ "$ok" -eq 1 ] || { echo "!! push failed after 3 attempts"; exit 1; }
