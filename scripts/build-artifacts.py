@@ -229,6 +229,38 @@ def main():
     recs = collect_node_records(results)
     checked_at = results.get("checkedAt", "") if isinstance(results, dict) else ""
 
+    # ---- 同身份去重：server+port+type+凭据 相同视为同一节点，保留速度标签最高者 ----
+    # 43 个源大量互相转载，同一 IP:port 会以不同测速快照出现多次（差可达 25 倍），误导用户
+    def _name_speed(n):
+        m = re.match(r".*?\|([\d.]+)(KB/s|MB/s)\|", n or "")
+        if not m:
+            return 0
+        v = float(m.group(1))
+        return int(v * 1024) if m.group(2) == "MB/s" else int(v)
+
+    seen = {}
+    uniq = []
+    dup_dropped = 0
+    for p in proxies:
+        key = (
+            p.get("server"),
+            p.get("port"),
+            p.get("type"),
+            p.get("uuid") or p.get("password") or p.get("username") or "",
+        )
+        prev = seen.get(key)
+        if prev is None:
+            seen[key] = p
+            uniq.append(p)
+        else:
+            dup_dropped += 1
+            if _name_speed(p.get("name")) > _name_speed(prev.get("name")):
+                uniq[uniq.index(prev)] = p
+                seen[key] = p
+    if dup_dropped:
+        print("==> 同身份去重: %d -> %d (移除冗余 %d)" % (len(proxies), len(uniq), dup_dropped))
+        proxies = uniq
+
     # ---- 全量 clash.yaml ----
     if proxies:
         header = (
@@ -270,6 +302,7 @@ def main():
         "|---|---|",
         "| 生成时间 | %s |" % stamp,
         "| 存活节点数 | %d |" % len(proxies),
+        "| 去重移除 | %d |" % dup_dropped,
         "| 测速节点明细 | %d |" % len(recs),
         "| 🏆 精品(YT+CL+GPT+纯净≤%d) | %d |" % (CLEAN_SCORE_STRICT, prem_n),
         "| 🎬 YouTube 解锁 | %d |" % yt_n,
