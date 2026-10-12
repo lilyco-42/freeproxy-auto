@@ -13,6 +13,7 @@
   openai.yaml  -- 仅 OpenAI/ChatGPT 可用节点（节点名含 GPT 标签）
   clean.yaml   -- 仅纯净 IP 节点（Scamalytics fraud score <= CLEAN_SCORE_MAX）
   ultra_clean.yaml -- 仅严格纯净节点（Scamalytics fraud score <= CLEAN_SCORE_STRICT 极佳段）
+  premium.yaml -- 精品节点（YouTube+Claude+OpenAI 全解锁 且 纯净度 ≤ CLEAN_SCORE_STRICT）
   v2ray.txt    -- base64 通用订阅
   status.md    -- 节点统计报告（分类数量 + 纯净度分布 + 速度 Top）
 """
@@ -138,7 +139,9 @@ def classify(proxies, recs):
         "openai": ("💬 OpenAI 可用", set()),
         "clean": ("🧼 纯净 IP", set()),
         "ultra_clean": ("💎 严格纯净 IP", set()),
+        "premium": ("🏆 精品节点", set()),
     }
+    # 先算出每轴命中，再组合（premium 需要四轴同时成立）
     for p in proxies:
         name = p.get("name", "")
         rec = recs.get(name, {})
@@ -148,11 +151,15 @@ def classify(proxies, recs):
         def has_tag(key):
             return bool(media.get(key)) or f"|{key}-" in name
 
-        if has_tag("youtube") or "|YT-" in name:
+        is_yt = has_tag("youtube") or "|YT-" in name
+        is_cl = has_tag("claude") or "|CL-" in name
+        is_gpt = bool(media.get("openai")) or "|GPT" in name or "|GPT⁺" in name
+
+        if is_yt:
             cats["youtube"][1].add(name)
-        if has_tag("claude") or "|CL-" in name:
+        if is_cl:
             cats["claude"][1].add(name)
-        if media.get("openai") or "|GPT" in name or "|GPT⁺" in name:
+        if is_gpt:
             cats["openai"][1].add(name)
 
         # 纯净 IP：优先 results 里的数值；缺失则从名字解析 "|NN%"
@@ -165,6 +172,9 @@ def classify(proxies, recs):
             cats["clean"][1].add(name)
         if risk is not None and risk <= CLEAN_SCORE_STRICT:
             cats["ultra_clean"][1].add(name)
+        # 精品：YouTube + Claude + OpenAI 三平台全解锁，且严格纯净（≤15）
+        if is_yt and is_cl and is_gpt and risk is not None and risk <= CLEAN_SCORE_STRICT:
+            cats["premium"][1].add(name)
 
     named = {p.get("name") for p in proxies}
     out = {}
@@ -176,6 +186,7 @@ def classify(proxies, recs):
             "openai": "仅含 ChatGPT/OpenAI 可用节点（含 Gemini 的 GPT 标签不在此列）",
             "clean": "仅含 Scamalytics 纯净度评分 ≤ %d 的节点（数值越低越干净，0-15 极佳）" % CLEAN_SCORE_MAX,
             "ultra_clean": "仅含 Scamalytics 纯净度评分 ≤ %d 的节点（极佳段，注册账号/AI 首选）" % CLEAN_SCORE_STRICT,
+            "premium": "四轴全过：YouTube + Claude + OpenAI 全解锁 且 Scamalytics 评分 ≤ %d（万里挑一，首选）" % CLEAN_SCORE_STRICT,
         }[key]
         out[key] = (title, subset, note)
     return cats, out
@@ -250,6 +261,7 @@ def main():
     op_n = len(cats["openai"][1])
     clean_n = len(cats["clean"][1])
     ultra_n = len(cats["ultra_clean"][1])
+    prem_n = len(cats["premium"][1])
 
     lines = [
         "# 📡 节点状态",
@@ -259,6 +271,7 @@ def main():
         "| 生成时间 | %s |" % stamp,
         "| 存活节点数 | %d |" % len(proxies),
         "| 测速节点明细 | %d |" % len(recs),
+        "| 🏆 精品(YT+CL+GPT+纯净≤%d) | %d |" % (CLEAN_SCORE_STRICT, prem_n),
         "| 🎬 YouTube 解锁 | %d |" % yt_n,
         "| 🤖 Claude 可用 | %d |" % cl_n,
         "| 💬 OpenAI 可用 | %d |" % op_n,
@@ -308,8 +321,8 @@ def main():
     print("==> output/ 产物:")
     for fn in sorted(os.listdir(out_dir)):
         print("   ", fn, os.path.getsize(os.path.join(out_dir, fn)))
-    print("==> 分类: youtube=%d claude=%d openai=%d clean=%d ultra_clean=%d (全量=%d)"
-          % (yt_n, cl_n, op_n, clean_n, ultra_n, len(proxies)))
+    print("==> 分类: youtube=%d claude=%d openai=%d clean=%d ultra_clean=%d premium=%d (全量=%d)"
+          % (yt_n, cl_n, op_n, clean_n, ultra_n, prem_n, len(proxies)))
 
 
 if __name__ == "__main__":
