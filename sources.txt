@@ -10,6 +10,7 @@ https://raw.githubusercontent.com/snakem982/proxypool/main/source/v2ray-2.txt
 https://raw.githubusercontent.com/snakem982/proxypool/main/source/sing-box-2.json
 
 # awesome-vpn/awesome-vpn ★6617 每日更新
+# 注: sing-box.json 只有 51 个 outbound, 其中 vless 41 个可解析, 保留
 https://raw.githubusercontent.com/awesome-vpn/awesome-vpn/master/clash.yaml
 https://raw.githubusercontent.com/awesome-vpn/awesome-vpn/master/all
 https://raw.githubusercontent.com/awesome-vpn/awesome-vpn/master/sing-box.json
@@ -19,8 +20,11 @@ https://raw.githubusercontent.com/Au1rxx/free-vpn-subscriptions/main/output/clas
 https://raw.githubusercontent.com/Au1rxx/free-vpn-subscriptions/main/output/v2ray-base64.txt
 
 # VPN-Subcription-Links/ClashX-V2Ray-TopFreeProxy ★5589
+# 注: combine/clashsub.txt 只是指向其它源的链接清单 (subs-check 报 format invalid),
+#     已剔除; 其独有下游源 xrayvip.com 直接补充进来
+# 注: free.datiya.com 是日期命名链接, 隔日即 404, 不收录
 https://raw.githubusercontent.com/VPN-Subcription-Links/ClashX-V2Ray-TopFreeProxy/main/combine/clash.config.yaml
-https://raw.githubusercontent.com/VPN-Subcription-Links/ClashX-V2Ray-TopFreeProxy/main/combine/clashsub.txt
+https://www.xrayvip.com/free.yaml
 
 # kooker/FreeSubsCheck ★418 每 2 小时更新
 https://raw.githubusercontent.com/kooker/FreeSubsCheck/main/mihomo.yaml

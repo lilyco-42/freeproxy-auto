@@ -297,6 +297,22 @@ def main():
         lines.append("| >%d（污染/机房高利） | %d |" % (CLEAN_SCORE_MAX, high))
         lines.append("")
 
+    # 国家/地区分布（取存活节点名首段旗帜后的国家码，results.country 优先）
+    from collections import Counter
+    cc = Counter()
+    for n in (results.get("nodes", []) if isinstance(results, dict) else []):
+        c = (n.get("country") or "").strip().upper()
+        if c:
+            cc[c] += 1
+    if cc:
+        lines.append("## 🌍 国家/地区分布 Top 15")
+        lines.append("")
+        lines.append("| 地区 | 节点数 |")
+        lines.append("|---|---|")
+        for code, cnt in cc.most_common(15):
+            lines.append("| %s | %d |" % (code, cnt))
+        lines.append("")
+
     def speed_of(n):
         try:
             return int(n.get("speed") or 0)
