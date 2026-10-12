@@ -8,10 +8,11 @@ cd "$REPO_ROOT"
 SUBS_CHECK_URL="https://github.com/beck-8/subs-check/releases/latest/download/subs-check_Linux_x86_64.tar.gz"
 
 # 1) 准备 subs-check 二进制
+# 注意: release tarball 里带上游 README.md/LICENSE, 必须排除解包, 否则每轮 CI 会把本仓库的 README 覆盖成上游模板
 if [ ! -x "$REPO_ROOT/subs-check" ]; then
   echo "==> downloading subs-check..."
   curl -fsSL -o /tmp/subs-check.tar.gz "$SUBS_CHECK_URL"
-  tar -xzf /tmp/subs-check.tar.gz -C "$REPO_ROOT"
+  tar -xzf /tmp/subs-check.tar.gz -C "$REPO_ROOT" subs-check
   chmod +x "$REPO_ROOT/subs-check"
 fi
 "$REPO_ROOT/subs-check" --help 2>/dev/null | head -5 || true
