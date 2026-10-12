@@ -3,9 +3,9 @@
 # 是否显示进度
 print-progress: true
 
-# 并发线程数（测活阶段）
-concurrent: 50
-# 流媒体检测并发数（未启用 media-check，不影响）
+# 并发线程数（测活阶段）——源池涨到 ~2 万节点后，50 并发在 40 分钟窗口内测不完
+concurrent: 80
+# 流媒体检测并发数
 media-concurrent: 20
 # 测速并发数（放低避免节点间抢带宽导致测速不准）
 speed-concurrent: 20
